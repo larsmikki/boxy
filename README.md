@@ -3,7 +3,8 @@
 ![screenshot](screenshot.png)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Docker](https://img.shields.io/badge/Docker-ready-blue?logo=docker)](https://hub.docker.com/r/larsmikki/boxy)
+[![Docker Hub](https://img.shields.io/badge/Docker%20Hub-larsmikki%2Fboxy-blue?logo=docker)](https://hub.docker.com/r/larsmikki/boxy)
+[![ghcr.io](https://img.shields.io/badge/ghcr.io-larsmikki%2Fboxy-blue?logo=github)](https://github.com/larsmikki/boxy/pkgs/container/boxy)
 [![Node 20](https://img.shields.io/badge/Node-20-brightgreen?logo=node.js)](https://nodejs.org/)
 
 **Boxy** is a self-hosted game collection manager. Track your physical game library and wishlist, attach box art, filter by condition, and back up everything to a single JSON file — no cloud accounts, no subscriptions, no tracking.
