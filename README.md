@@ -8,8 +8,6 @@
 
 **Boxy** is a self-hosted game collection manager. Track your physical game library and wishlist, attach box art, filter by condition, and back up everything to a single JSON file — no cloud accounts, no subscriptions, no tracking.
 
----
-
 ## Features
 
 - Add, edit, and delete games with title, condition, box art, and notes
@@ -22,15 +20,11 @@
 - Adjustable card sizes (small / medium / large)
 - Fully offline after first load — your data never leaves your machine
 
----
-
 ## Requirements
 
 - Docker and Docker Compose
 
 That's it. No database to set up, no external services required.
-
----
 
 ## Docker setup
 
@@ -66,18 +60,14 @@ volumes:
   boxy-data:
 ```
 
----
-
 ## Configuration
 
 All configuration is done via environment variables:
 
-| Variable   | Default     | Description                        |
-|------------|-------------|------------------------------------|
-| `PORT`     | `3070`      | Port the server listens on         |
+| Variable   | Default     | Description                           |
+|------------|-------------|---------------------------------------|
+| `PORT`     | `3070`      | Port the server listens on            |
 | `DATA_DIR` | `/app/data` | Directory for `games.json` and images |
-
----
 
 ## Usage
 
@@ -92,8 +82,6 @@ All configuration is done via environment variables:
 | Import backup | **Settings → Import Backup** |
 | Change theme | **Settings → Themes** |
 
----
-
 ## Data and runtime folders
 
 All data is stored in `DATA_DIR` (the Docker volume `boxy-data` by default):
@@ -105,8 +93,6 @@ All data is stored in `DATA_DIR` (the Docker volume `boxy-data` by default):
 ```
 
 To back up manually, copy `games.json` and the `images/` folder. The **Export Backup** feature in Settings produces a single portable JSON file with images embedded.
-
----
 
 ## Troubleshooting
 
@@ -122,19 +108,13 @@ Make sure the Docker volume is mounted and the container has write permissions. 
 **Lost my data after recreating the container**
 Data is stored in the Docker volume, not inside the container. Use `docker volume ls` to verify the volume exists and mount it again when recreating.
 
----
-
 ## Contributing
 
 Issues and pull requests are welcome. Please open an issue first to discuss larger changes.
 
----
-
 ## License
 
 [MIT](LICENSE)
-
----
 
 ## Support
 
