@@ -1,0 +1,364 @@
+openapi: 3.1.0
+info:
+  title: Boxy API
+  description: Game collection management API. All state is stored server-side in a JSON file.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3070
+    description: Local / Docker
+
+components:
+  schemas:
+    Game:
+      type: object
+      required: [id, title, condition, is_wishlist, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          example: Half-Life
+        condition:
+          type: string
+          enum: [Sealed, Excellent, Good, Fair, Poor]
+        edition:
+          type: string
+          example: "Collector's Edition"
+        image_url:
+          type: string
+          example: /api/images/abc123.jpg
+        notes:
+          type: string
+        is_wishlist:
+          type: boolean
+        current_price:
+          type: number
+          nullable: true
+          example: 29.99
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ImageSearchResult:
+      type: object
+      required: [thumb, full, title]
+      properties:
+        thumb:
+          type: string
+          description: Thumbnail URL (external)
+        full:
+          type: string
+          description: Full-resolution URL (external)
+        title:
+          type: string
+
+    Problem:
+      type: object
+      description: RFC 9457 Problem Details
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          example: about:blank
+        title:
+          type: string
+          example: Bad Request
+        status:
+          type: integer
+          example: 400
+        detail:
+          type: string
+          example: Query parameter "q" is required
+
+  responses:
+    Empty:
+      description: Success with empty body
+      content:
+        application/json:
+          schema:
+            type: object
+
+    Problem400:
+      description: Bad request
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+    Problem404:
+      description: Route not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+    Problem415:
+      description: Unsupported media type
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+    Problem500:
+      description: Internal server error
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+
+paths:
+  /api/games:
+    get:
+      summary: List all games
+      operationId: listGames
+      responses:
+        '200':
+          description: Array of games (most recent first)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Game'
+        '500':
+          $ref: '#/components/responses/Problem500'
+
+    post:
+      summary: Create or update a game
+      description: If the body includes an `id` that matches an existing game, it is updated. Otherwise a new game is created.
+      operationId: saveGame
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Game'
+      responses:
+        '200':
+          $ref: '#/components/responses/Empty'
+        '500':
+          $ref: '#/components/responses/Problem500'
+
+    delete:
+      summary: Delete all games
+      operationId: deleteAllGames
+      responses:
+        '200':
+          $ref: '#/components/responses/Empty'
+        '500':
+          $ref: '#/components/responses/Problem500'
+
+  /api/games/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+
+    delete:
+      summary: Delete a single game
+      operationId: deleteGame
+      responses:
+        '200':
+          $ref: '#/components/responses/Empty'
+        '500':
+          $ref: '#/components/responses/Problem500'
+
+  /api/games/{id}/wishlist:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+
+    patch:
+      summary: Toggle the wishlist flag on a game
+      operationId: toggleWishlist
+      responses:
+        '200':
+          $ref: '#/components/responses/Empty'
+        '500':
+          $ref: '#/components/responses/Problem500'
+
+  /api/games/bulk-update:
+    post:
+      summary: Apply the same update to multiple games
+      operationId: bulkUpdateGames
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ids, updates]
+              properties:
+                ids:
+                  type: array
+                  items:
+                    type: string
+                updates:
+                  type: object
+                  description: Partial Game fields to apply
+      responses:
+        '200':
+          $ref: '#/components/responses/Empty'
+        '500':
+          $ref: '#/components/responses/Problem500'
+
+  /api/games/import:
+    post:
+      summary: Import games from an export payload
+      description: Skips games whose `id` already exists. Decodes embedded base64 images.
+      operationId: importGames
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [games]
+              properties:
+                games:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Game'
+      responses:
+        '200':
+          description: Number of games added
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  added:
+                    type: integer
+        '500':
+          $ref: '#/components/responses/Problem500'
+
+  /api/images:
+    post:
+      summary: Upload an image
+      description: Accepts raw image bytes. Returns a persistent `/api/images/{filename}` URL.
+      operationId: uploadImage
+      requestBody:
+        required: true
+        content:
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+          image/png:
+            schema:
+              type: string
+              format: binary
+          image/webp:
+            schema:
+              type: string
+              format: binary
+          image/gif:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Saved image URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    example: /api/images/abc123.jpg
+        '415':
+          $ref: '#/components/responses/Problem415'
+        '500':
+          $ref: '#/components/responses/Problem500'
+
+  /api/images/{filename}:
+    get:
+      summary: Retrieve a stored image
+      operationId: getImage
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Image binary
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        '500':
+          $ref: '#/components/responses/Problem500'
+
+  /api/proxy-and-save:
+    get:
+      summary: Fetch an external image server-side and save it
+      description: Resolves DNS to block private/internal addresses (SSRF guard). Only accepts image/* content types.
+      operationId: proxyAndSave
+      parameters:
+        - name: url
+          in: query
+          required: true
+          schema:
+            type: string
+          description: URL-encoded external image URL
+      responses:
+        '200':
+          description: Saved image URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+        '500':
+          $ref: '#/components/responses/Problem500'
+
+  /api/search-images:
+    get:
+      summary: Search for box art images via DuckDuckGo
+      description: Returns up to 9 results per page. Use `offset` for pagination.
+      operationId: searchImages
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          example: Half-Life PC game box art
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  images:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ImageSearchResult'
+        '400':
+          $ref: '#/components/responses/Problem400'
+        '500':
+          $ref: '#/components/responses/Problem500'

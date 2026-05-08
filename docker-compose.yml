@@ -1,0 +1,19 @@
+services:
+  boxy:
+    image: larsmikki/boxy:latest
+    container_name: boxy
+    ports:
+      - "3070:3070"
+    volumes:
+      - boxy-data:/app/data
+    restart: unless-stopped
+    environment:
+      - DATA_DIR=/app/data
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3070/api/health"]
+      interval: 300s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  boxy-data:

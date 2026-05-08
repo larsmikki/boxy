@@ -1,0 +1,17 @@
+<svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="boxy-fav-bg" x1="0" y1="0" x2="1" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="#a3e635"/>
+      <stop offset="100%" stop-color="#65a30d"/>
+    </linearGradient>
+    <linearGradient id="boxy-fav-sh" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="white" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="white" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="36" height="36" rx="10" fill="url(#boxy-fav-bg)"/>
+  <rect width="36" height="20" rx="10" fill="url(#boxy-fav-sh)"/>
+  <polygon points="18,7 28,13 18,19 8,13" fill="white" opacity="0.95"/>
+  <polygon points="28,13 28,25 18,31 18,19" fill="white" opacity="0.55"/>
+  <polygon points="8,13 18,19 18,31 8,25" fill="white" opacity="0.3"/>
+</svg>
