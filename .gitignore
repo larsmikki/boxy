@@ -31,8 +31,14 @@ Thumbs.db
 # Windows batch files
 *.bat
 
+# Environment files
+.env
+.env.*
+
 # Database / runtime data
 data/
+test_album/
+
+# Tool-specific
 .gstack/
-# Added by code-review-graph
 .code-review-graph/
