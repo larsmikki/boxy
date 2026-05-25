@@ -12,7 +12,7 @@ export default function Layout() {
   const settingsActive = location.pathname === '/settings'
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: theme.bg, color: theme.text }}>
+    <div className="min-h-screen flex flex-col bg-bg text-text">
       <header
         className="sticky top-0 z-40 backdrop-blur-md"
         style={{ background: `${theme.surface}dd`, borderBottom: `1px solid ${theme.border}` }}

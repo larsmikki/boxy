@@ -21,15 +21,13 @@
 - Adjustable card sizes (small / medium / large)
 - Fully offline after first load — your data never leaves your machine
 
-## Requirements
+## Getting started
 
-- Docker and Docker Compose
+Pick whichever install path matches your setup. All paths land on [http://localhost:3070](http://localhost:3070). No database to set up, no external services required.
 
-That's it. No database to set up, no external services required.
+### 1. Docker (Docker Desktop, NAS, or any Docker server)
 
-## Docker setup
-
-### Quick start
+Works on Synology, Unraid, TrueNAS, QNAP, Proxmox, or a plain Docker host.
 
 ```bash
 docker run -d \
@@ -40,11 +38,7 @@ docker run -d \
   larsmikki/boxy:latest
 ```
 
-Then open [http://localhost:3070](http://localhost:3070).
-
-### Docker Compose (recommended)
-
-Save this as `docker-compose.yml` and run `docker compose up -d`:
+Or with Compose:
 
 ```yaml
 services:
@@ -60,6 +54,49 @@ services:
 volumes:
   boxy-data:
 ```
+
+### 2. Local install on Windows
+
+Requires [Git for Windows](https://git-scm.com/download/win) and [Node.js 20+](https://nodejs.org/).
+
+```powershell
+git clone https://github.com/larsmikki/boxy.git
+cd boxy
+npm install
+npm run dev
+```
+
+For a production build: `npm run build && npm start`.
+
+### 3. Local install on macOS
+
+```bash
+brew install node git
+git clone https://github.com/larsmikki/boxy.git
+cd boxy
+npm install
+npm run dev
+```
+
+For a production build: `npm run build && npm start`.
+
+### 4. Local install on Linux
+
+Debian/Ubuntu:
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs git
+
+git clone https://github.com/larsmikki/boxy.git
+cd boxy
+npm install
+npm run dev
+```
+
+On Fedora/RHEL use `dnf install nodejs git`; on Arch use `pacman -S nodejs npm git`.
+
+For a production build: `npm run build && npm start`.
 
 ## Configuration
 

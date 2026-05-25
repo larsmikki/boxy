@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { globalBtnStyle } from '@/lib/styles'
-import { X, Upload, Search, Loader2 } from 'lucide-react'
+import { Loader2, Search, Upload, X } from 'lucide-react'
 import { useTheme } from '@/contexts/ThemeContext'
+import { Button, Input, Select, Textarea } from '@/components/ui'
 import { CONDITIONS } from '@/types'
 import type { Game } from '@/types'
 
@@ -78,7 +78,9 @@ export default function GameForm({ game, onSave, onCancel, isWishlist = false }:
       const buffer = await file.arrayBuffer()
       const url = await uploadImageBuffer(buffer, file.type || 'image/jpeg')
       setFormData(prev => ({ ...prev, image_url: url }))
-    } catch { /* silent */ }
+    } catch {
+      // Upload errors are non-blocking; the user can try another source.
+    }
   }
 
   const handleUrlLoad = async () => {
@@ -88,8 +90,11 @@ export default function GameForm({ game, onSave, onCancel, isWishlist = false }:
       const url = await proxyAndSave(imageUrlInput)
       setFormData(prev => ({ ...prev, image_url: url }))
       setImageUrlInput('')
-    } catch { /* silent */ }
-    finally { setIsLoadingUrl(false) }
+    } catch {
+      // Load errors are non-blocking; the user can paste another URL.
+    } finally {
+      setIsLoadingUrl(false)
+    }
   }
 
   const handleSearchBoxArt = async () => {
@@ -120,8 +125,11 @@ export default function GameForm({ game, onSave, onCancel, isWishlist = false }:
         setBoxArtResults(prev => [...prev, ...results])
         setSearchOffset(nextOffset)
       }
-    } catch { /* silent */ }
-    finally { setIsLoadingMore(false) }
+    } catch {
+      // Existing results remain usable if pagination fails.
+    } finally {
+      setIsLoadingMore(false)
+    }
   }
 
   const handleSelectResult = async (result: BoxArtResult, index: number) => {
@@ -137,63 +145,23 @@ export default function GameForm({ game, onSave, onCancel, isWishlist = false }:
     }
   }
 
-  const btn = (primary = false, disabled = false) => ({
-    ...globalBtnStyle,
-    padding: '7px 14px',
-    height: 'auto',
-    cursor: disabled ? 'not-allowed' as const : 'pointer' as const,
-    opacity: disabled ? 0.5 : 1,
-    border: primary ? 'none' : `1px solid ${theme.border}`,
-    background: primary ? theme.accent : theme.surface2,
-    color: primary ? '#fff' : theme.text,
-  })
-
-  const label = {
-    fontSize: '0.875rem', fontWeight: 500 as const,
-    color: theme.text, marginBottom: '6px', display: 'block',
-  }
-
-  const inputStyle = {
-    width: '100%', padding: '8px 12px', borderRadius: '6px',
-    border: `1px solid ${theme.border}`, background: theme.surface,
-    color: theme.text, fontSize: '0.875rem', outline: 'none',
-  }
-
   return (
-    <div
-      className="w-full max-w-xl mx-auto"
-      style={{
-        background: theme.surface, border: `1px solid ${theme.border}`,
-        borderRadius: '0.75rem', padding: '24px',
-      }}
-    >
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold" style={{ color: theme.text }}>
-          {game ? 'Edit Game' : `Add ${isWishlist ? 'Wishlist ' : ''}Game`}
-        </h2>
-        <button type="button" onClick={onCancel} style={{ ...btn(), padding: '6px', height: 'auto' }}>
-          <X className="w-4 h-4" />
-        </button>
-      </div>
-
+    <div className="p-6">
       <form onSubmit={handleSubmit} className="space-y-5">
-        {/* Title */}
         <div>
-          <label style={label}>Title *</label>
-          <input
+          <label className="text-xs uppercase tracking-wider font-semibold text-text2 mb-1 block">Title *</label>
+          <Input
             type="text"
             value={formData.title}
             onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))}
             placeholder="Enter game title"
             required
             autoFocus
-            style={inputStyle}
           />
         </div>
 
-        {/* Box Art */}
         <div>
-          <label style={label}>Box Art</label>
+          <label className="text-xs uppercase tracking-wider font-semibold text-text2 mb-1 block">Box art</label>
 
           {formData.image_url ? (
             <div className="flex items-start gap-4">
@@ -207,26 +175,19 @@ export default function GameForm({ game, onSave, onCancel, isWishlist = false }:
                 <button
                   type="button"
                   onClick={() => setFormData(prev => ({ ...prev, image_url: '' }))}
-                  style={{
-                    position: 'absolute', top: '-8px', right: '-8px',
-                    width: '20px', height: '20px', borderRadius: '50%',
-                    background: '#ef4444', color: '#fff', border: 'none',
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}
+                  className="absolute -top-2 -right-2 w-5 h-5 rounded-full flex items-center justify-center bg-danger text-white"
+                  aria-label="Remove image"
                 >
                   <X className="w-3 h-3" />
                 </button>
               </div>
-              <div style={{ color: theme.text2, fontSize: '0.8rem', paddingTop: '4px' }}>
+              <div className="text-xs pt-1 text-text2">
                 <p>Box art loaded.</p>
                 <button
                   type="button"
                   onClick={() => setFormData(prev => ({ ...prev, image_url: '' }))}
-                  style={{
-                    color: theme.accent, textDecoration: 'underline',
-                    background: 'none', border: 'none', cursor: 'pointer',
-                    fontSize: '0.8rem', padding: 0, marginTop: '4px',
-                  }}
+                  className="mt-1 underline"
+                  style={{ color: theme.accent }}
                 >
                   Change image
                 </button>
@@ -236,75 +197,72 @@ export default function GameForm({ game, onSave, onCancel, isWishlist = false }:
             <div className="space-y-2">
               <div className="flex gap-2 flex-wrap">
                 <input type="file" accept="image/*" onChange={handleImageUpload} className="hidden" id="image-upload" />
-                <button type="button" style={btn()} onClick={() => document.getElementById('image-upload')?.click()}>
-                  <Upload className="w-4 h-4" /> Upload File
-                </button>
-                <button
+                <Button
                   type="button"
-                  style={btn(false, isSearching || !formData.title.trim())}
+                  leadingIcon={<Upload className="w-4 h-4" />}
+                  onClick={() => document.getElementById('image-upload')?.click()}
+                >
+                  Upload file
+                </Button>
+                <Button
+                  type="button"
+                  leadingIcon={isSearching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
                   onClick={handleSearchBoxArt}
                   disabled={isSearching || !formData.title.trim()}
                 >
-                  {isSearching
-                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Searching…</>
-                    : <><Search className="w-4 h-4" /> Find Box Art</>
-                  }
-                </button>
+                  {isSearching ? 'Searching...' : 'Find box art'}
+                </Button>
               </div>
 
               <div className="flex gap-2">
-                <input
+                <Input
                   type="text"
-                  placeholder="Or paste image URL…"
+                  placeholder="Or paste image URL..."
                   value={imageUrlInput}
                   onChange={e => setImageUrlInput(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleUrlLoad())}
-                  style={{ ...inputStyle, flex: 1 }}
+                  className="flex-1"
                 />
-                <button
+                <Button
                   type="button"
-                  style={btn(false, !imageUrlInput.trim() || isLoadingUrl)}
                   onClick={handleUrlLoad}
                   disabled={!imageUrlInput.trim() || isLoadingUrl}
                 >
                   {isLoadingUrl ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Load'}
-                </button>
+                </Button>
               </div>
             </div>
           )}
 
           {searchError && (
-            <p style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '6px' }}>{searchError}</p>
+            <p className="text-xs mt-1.5 text-danger">{searchError}</p>
           )}
 
           {boxArtResults.length > 0 && !formData.image_url && (
             <div className="mt-3 space-y-2">
-              <div className="grid gap-2" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+              <div className="grid gap-2 grid-cols-3">
                 {boxArtResults.map((result, i) => (
                   <button
-                    key={i}
+                    key={`${result.thumb}-${i}`}
                     type="button"
                     onClick={() => handleSelectResult(result, i)}
                     disabled={loadingIndex !== null}
+                    className="relative overflow-hidden rounded-md aspect-[3/4] p-0"
                     style={{
-                      position: 'relative', borderRadius: '6px', overflow: 'hidden',
                       border: `1px solid ${theme.border}`,
                       cursor: loadingIndex !== null ? 'wait' : 'pointer',
-                      aspectRatio: '3/4', background: theme.surface2, padding: 0,
+                      background: theme.surface2,
                     }}
                     title={result.title}
                   >
                     <img
                       src={result.thumb}
                       alt={result.title}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      className="w-full h-full object-cover block"
                       onError={e => { (e.target as HTMLImageElement).style.opacity = '0.2' }}
                     />
                     {loadingIndex === i && (
-                      <div style={{
-                        position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                         <Loader2 className="w-5 h-5 text-white animate-spin" />
                       </div>
                     )}
@@ -312,62 +270,56 @@ export default function GameForm({ game, onSave, onCancel, isWishlist = false }:
                 ))}
               </div>
               <div className="flex gap-2">
-                <button
+                <Button
                   type="button"
-                  style={{ ...btn(false, isLoadingMore), flex: 1, justifyContent: 'center' }}
+                  className="flex-1"
                   onClick={handleLoadMore}
                   disabled={isLoadingMore}
                 >
-                  {isLoadingMore ? <><Loader2 className="w-4 h-4 animate-spin" /> Loading…</> : 'More'}
-                </button>
-                <button
+                  {isLoadingMore ? <><Loader2 className="w-4 h-4 animate-spin" /> Loading...</> : 'More'}
+                </Button>
+                <Button
                   type="button"
-                  style={{ ...btn(), flex: 1, justifyContent: 'center' }}
+                  className="flex-1"
                   onClick={() => setBoxArtResults([])}
                 >
                   Clear
-                </button>
+                </Button>
               </div>
             </div>
           )}
         </div>
 
-        {/* Condition */}
         <div>
-          <label style={label}>Condition</label>
-          <select
+          <label className="text-xs uppercase tracking-wider font-semibold text-text2 mb-1 block">Condition</label>
+          <Select
             value={formData.condition}
             onChange={e => setFormData(prev => ({ ...prev, condition: e.target.value }))}
-            style={inputStyle}
           >
             {CONDITIONS.map(c => (
               <option key={c} value={c}>{c}</option>
             ))}
-          </select>
+          </Select>
         </div>
 
-        {/* Notes */}
         <div>
-          <label style={label}>Notes</label>
-          <textarea
+          <label className="text-xs uppercase tracking-wider font-semibold text-text2 mb-1 block">Notes</label>
+          <Textarea
             value={formData.notes ?? ''}
             onChange={e => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-            placeholder="Personal notes about this game…"
+            placeholder="Personal notes about this game..."
             rows={3}
-            style={{ ...inputStyle, resize: 'none' }}
+            className="resize-none"
           />
         </div>
 
         <div className="flex gap-3 pt-2">
-          <button
-            type="submit"
-            style={{ ...btn(true), flex: 1, justifyContent: 'center', height: '40px' }}
-          >
-            {game ? 'Update Game' : 'Add Game'}
-          </button>
-          <button type="button" style={{ ...btn(), height: '40px' }} onClick={onCancel}>
+          <Button type="submit" variant="primary" className="flex-1">
+            {game ? 'Update game' : 'Add game'}
+          </Button>
+          <Button type="button" onClick={onCancel}>
             Cancel
-          </button>
+          </Button>
         </div>
       </form>
     </div>

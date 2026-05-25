@@ -1,15 +1,21 @@
 import { useRef, useState } from 'react'
-import { useTheme } from '@/contexts/ThemeContext'
+import { Download, Trash2, Upload } from 'lucide-react'
 import ThemePicker from '@/components/ThemePicker'
 import { useCardSize } from '@/hooks/useCardSize'
-import { useToast } from '@/contexts/ToastContext'
+import { Button, Input, Modal, Surface, useToast } from '@/components/ui'
 import { deleteAllGames } from '@/lib/db'
 
 const DELETE_PHRASE = 'Yes, delete all games.'
 
+interface ExportGame {
+  edition?: unknown
+  current_price?: unknown
+  image_url?: string
+  [key: string]: unknown
+}
+
 export default function SettingsPage() {
-  const { theme } = useTheme()
-  const { toast } = useToast()
+  const { addToast } = useToast()
   const importRef = useRef<HTMLInputElement>(null)
   const [importing, setImporting] = useState(false)
   const [exporting, setExporting] = useState(false)
@@ -17,34 +23,14 @@ export default function SettingsPage() {
   const [deleteConfirmText, setDeleteConfirmText] = useState('')
   const { cardSize, setCardSize } = useCardSize()
 
-  const sectionStyle = {
-    background: theme.surface, border: `1px solid ${theme.border}`,
-    borderRadius: '16px', padding: '24px', marginBottom: '20px',
-  }
-
-  const btnStyle = (active = false) => ({
-    display: 'inline-flex' as const, alignItems: 'center' as const, gap: '6px',
-    padding: '8px 16px', borderRadius: '10px', fontSize: '0.875rem', fontWeight: 500,
-    cursor: 'pointer',
-    background: active ? `${theme.accent}15` : theme.surface2,
-    color: active ? theme.accent : theme.text,
-    border: active ? `1px solid ${theme.accent}` : `1px solid ${theme.border}`,
-    boxShadow: active ? `0 0 0 3px ${theme.accent}15` : 'none',
-  })
-
-  const inputStyle = {
-    padding: '7px 12px', borderRadius: '0.375rem',
-    border: `1px solid ${theme.border}`, background: theme.surface2,
-    color: theme.text, fontSize: '0.875rem', outline: 'none',
-  }
-
   const handleExport = async () => {
     setExporting(true)
     try {
-      const games = await fetch('/api/games').then(r => r.json())
-      const gamesWithImages = await Promise.all(games.map(async (game: any) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { edition, current_price, ...rest } = game
+      const games = await fetch('/api/games').then(r => r.json()) as ExportGame[]
+      const gamesWithImages = await Promise.all(games.map(async (game) => {
+        const { edition: _edition, current_price: _currentPrice, ...rest } = game
+        void _edition
+        void _currentPrice
         if (!rest.image_url?.startsWith('/api/images/')) return rest
         try {
           const res = await fetch(rest.image_url)
@@ -68,9 +54,9 @@ export default function SettingsPage() {
       a.download = `boxy-backup-${new Date().toISOString().split('T')[0]}.json`
       a.click()
       URL.revokeObjectURL(url)
-      toast({ title: 'Backup exported', description: `${games.length} games saved to file.` })
+      addToast(`Backup exported - ${games.length} games saved to file.`, 'success')
     } catch {
-      toast({ title: 'Export failed', variant: 'destructive' })
+      addToast('Export failed', 'error')
     } finally {
       setExporting(false)
     }
@@ -79,11 +65,11 @@ export default function SettingsPage() {
   const handleDeleteAll = async () => {
     try {
       await deleteAllGames()
-      toast({ title: 'All games deleted', description: 'Your collection has been cleared.' })
+      addToast('All games deleted - your collection has been cleared.', 'success')
       setShowDeleteConfirm(false)
       setDeleteConfirmText('')
     } catch {
-      toast({ title: 'Delete failed', variant: 'destructive' })
+      addToast('Delete failed', 'error')
     }
   }
 
@@ -104,12 +90,13 @@ export default function SettingsPage() {
         const result = await res.json()
         if (!res.ok) throw new Error(result?.error || `Server error ${res.status}`)
         const { added } = result
-        toast({
-          title: 'Import complete',
-          description: added > 0 ? `${added} new games added.` : 'No new games found (all already exist).',
-        })
-      } catch (err: any) {
-        toast({ title: 'Import failed', description: err.message || 'Could not import backup file.', variant: 'destructive' })
+        addToast(
+          added > 0 ? `Import complete - ${added} new games added.` : 'Import complete - no new games found.',
+          'success',
+        )
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Could not import backup file.'
+        addToast(`Import failed - ${message}`, 'error')
       } finally {
         setImporting(false)
         if (importRef.current) importRef.current.value = ''
@@ -121,108 +108,109 @@ export default function SettingsPage() {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: theme.text }}>Settings</h1>
-        <p className="text-sm mt-0.5" style={{ color: theme.text2 }}>Customize your Boxy experience.</p>
+        <h1 className="text-2xl font-extrabold tracking-tight text-text">Settings</h1>
+        <p className="text-sm mt-0.5 text-text2">Customize your Boxy experience.</p>
       </div>
 
-      {/* Themes */}
-      <div style={sectionStyle}>
-        <h2 className="text-base font-bold mb-1" style={{ color: theme.text }}>Themes</h2>
-        <p className="text-xs mb-5" style={{ color: theme.text2 }}>Choose how Boxy looks to you.</p>
+      <Surface className="p-6 mb-5">
+        <h2 className="text-base font-bold mb-1 text-text">Themes</h2>
+        <p className="text-xs mb-5 text-text2">Choose how Boxy looks to you.</p>
         <ThemePicker />
-      </div>
+      </Surface>
 
-      {/* Card Size */}
-      <div style={sectionStyle}>
-        <h2 className="text-base font-bold mb-1" style={{ color: theme.text }}>Card size</h2>
-        <p className="text-xs mb-5" style={{ color: theme.text2 }}>Controls how large game cards appear in your collection.</p>
-        <div className="flex gap-2">
-          {(['small', 'medium', 'large'] as const).map(size => (
-            <button
-              key={size}
-              style={btnStyle(cardSize === size)}
-              onClick={() => setCardSize(size)}
-            >
-              {size.charAt(0).toUpperCase() + size.slice(1)}
-            </button>
-          ))}
+      <Surface className="p-6 mb-5">
+        <h2 className="text-base font-bold mb-1 text-text">Layout</h2>
+        <p className="text-xs mb-5 text-text2">Controls how large game cards appear in your collection.</p>
+        <div className="grid grid-cols-3 gap-2">
+          {(['small', 'medium', 'large'] as const).map(size => {
+            const active = cardSize === size
+            return (
+              <button
+                key={size}
+                type="button"
+                className="px-3 py-2.5 rounded-lg text-sm font-semibold transition-opacity hover:opacity-90"
+                style={{
+                  background: active ? 'rgb(from var(--color-accent) r g b / 0.15)' : 'var(--color-surface2)',
+                  border: `1px solid ${active ? 'var(--color-accent)' : 'var(--color-border)'}`,
+                  color: active ? 'var(--color-accent)' : 'var(--color-text2)',
+                  boxShadow: active ? '0 0 0 3px rgb(from var(--color-accent) r g b / 0.15)' : 'none',
+                }}
+                onClick={() => setCardSize(size)}
+              >
+                {size.charAt(0).toUpperCase() + size.slice(1)}
+              </button>
+            )
+          })}
         </div>
-      </div>
+      </Surface>
 
-      {/* Data */}
-      <div style={sectionStyle}>
-        <h2 className="text-base font-bold mb-1" style={{ color: theme.text }}>Data</h2>
-        <p className="text-xs mb-5" style={{ color: theme.text2 }}>
+      <Surface className="p-6">
+        <h2 className="text-base font-bold mb-1 text-text">Data</h2>
+        <p className="text-xs mb-5 text-text2">
           Export a backup of your collection or restore from a previous backup.
-          Importing only adds new games — existing ones are never overwritten.
+          Importing only adds new games; existing ones are never overwritten.
         </p>
-        <div className="flex gap-3">
-          <button
+        <div className="flex flex-wrap gap-3">
+          <Button
+            type="button"
             onClick={handleExport}
             disabled={exporting}
-            className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition-all hover:opacity-80"
-            style={{ background: theme.surface2, color: theme.text, border: `1px solid ${theme.border}`, opacity: exporting ? 0.6 : 1 }}
+            leadingIcon={<Download className="h-4 w-4" />}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-            {exporting ? 'Exporting…' : 'Export Backup'}
-          </button>
-          <button
+            {exporting ? 'Exporting...' : 'Export backup'}
+          </Button>
+          <Button
+            type="button"
             onClick={() => importRef.current?.click()}
             disabled={importing}
-            className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold rounded-xl transition-all hover:opacity-80"
-            style={{ background: theme.surface2, color: theme.text, border: `1px solid ${theme.border}`, opacity: importing ? 0.6 : 1 }}
+            leadingIcon={<Upload className="h-4 w-4" />}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
-            </svg>
-            {importing ? 'Importing…' : 'Import Backup'}
-          </button>
+            {importing ? 'Importing...' : 'Import backup'}
+          </Button>
           <input ref={importRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
-          <button
-            style={{ ...btnStyle(), color: '#dc2626', borderColor: '#fca5a5' }}
+          <Button
+            type="button"
+            variant="danger"
             onClick={() => { setShowDeleteConfirm(true); setDeleteConfirmText('') }}
+            leadingIcon={<Trash2 className="h-4 w-4" />}
           >
-            Delete All Games
-          </button>
+            Delete all games
+          </Button>
         </div>
+      </Surface>
 
-        {showDeleteConfirm && (
-          <div className="mt-4 p-4 rounded-lg" style={{ background: '#fff1f2', border: '1px solid #fca5a5' }}>
-            <p className="text-sm font-medium mb-1" style={{ color: '#991b1b' }}>
+      {showDeleteConfirm && (
+        <Modal title="Delete all games" onClose={() => setShowDeleteConfirm(false)} maxWidth={520}>
+          <div className="p-6">
+            <p className="text-sm font-medium text-text">
               This will permanently delete all games and wishlist items.
             </p>
-            <p className="text-sm mb-3" style={{ color: '#7f1d1d' }}>
+            <p className="text-sm mt-2 mb-4 text-text2">
               Type <strong>{DELETE_PHRASE}</strong> to confirm.
             </p>
-            <div className="flex gap-2 items-center flex-wrap">
-              <input
-                type="text"
-                value={deleteConfirmText}
-                onChange={e => setDeleteConfirmText(e.target.value)}
-                placeholder={DELETE_PHRASE}
-                style={{ ...inputStyle, background: '#fff', color: '#1a1a2e', width: '240px', border: '1px solid #fca5a5' }}
-              />
-              <button
-                style={{
-                  ...btnStyle(),
-                  background: deleteConfirmText === DELETE_PHRASE ? '#dc2626' : '#fca5a5',
-                  color: '#fff', border: 'none',
-                  cursor: deleteConfirmText === DELETE_PHRASE ? 'pointer' : 'not-allowed',
-                }}
+            <Input
+              type="text"
+              value={deleteConfirmText}
+              onChange={e => setDeleteConfirmText(e.target.value)}
+              placeholder={DELETE_PHRASE}
+              invalid={deleteConfirmText.length > 0 && deleteConfirmText !== DELETE_PHRASE}
+            />
+            <div className="mt-5 flex justify-end gap-2">
+              <Button type="button" onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText('') }}>
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant="danger"
                 disabled={deleteConfirmText !== DELETE_PHRASE}
                 onClick={handleDeleteAll}
               >
-                Confirm Delete
-              </button>
-              <button style={btnStyle()} onClick={() => { setShowDeleteConfirm(false); setDeleteConfirmText('') }}>
-                Cancel
-              </button>
+                Confirm delete
+              </Button>
             </div>
           </div>
-        )}
-      </div>
+        </Modal>
+      )}
     </div>
   )
 }

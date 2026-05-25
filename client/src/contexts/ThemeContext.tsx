@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 
 export interface ThemeDefinition {
@@ -21,9 +22,27 @@ export const THEMES: ThemeDefinition[] = [
     mode: 'light',
     bg: '#f0f2f5', surface: '#ffffff', surface2: '#e8eaed', border: 'rgba(0,0,0,0.09)',
     text: '#1a1a2e', text2: '#6b7280',
-    accent: '#65a30d', gradient: 'linear-gradient(135deg, #a3e635 0%, #65a30d 100%)',
+    accent: '#65a30d', gradient: 'linear-gradient(135deg, #84cc16 0%, #4d7c0f 100%)',
     previewColors: ['#e8eaed', '#d1d5db', '#65a30d'],
     groupColors: ['#ffffff'],
+  },
+  {
+    name: 'Dark',
+    mode: 'dark',
+    bg: '#0f0f1a', surface: '#1a1a2e', surface2: '#252540', border: 'rgba(101,163,13,0.18)',
+    text: '#e8e8f0', text2: '#8888a8',
+    accent: '#65a30d', gradient: 'linear-gradient(135deg, #84cc16 0%, #4d7c0f 100%)',
+    previewColors: ['#1a1a2e', '#252540', '#65a30d'],
+    groupColors: ['#1e1e32', '#1a2535', '#1e2a1e', '#2a1e2a'],
+  },
+  {
+    name: 'Midnight',
+    mode: 'dark',
+    bg: '#0b1120', surface: '#111827', surface2: '#1f2937', border: 'rgba(101, 163, 13, 0.18)',
+    text: '#f8fafc', text2: '#94a3b8',
+    accent: '#84cc16', gradient: 'linear-gradient(135deg, #a3e635 0%, #65a30d 100%)',
+    previewColors: ['#111827', '#1f2937', '#84cc16'],
+    groupColors: ['#111827', '#172554', '#14532d', '#312e81'],
   },
   {
     name: 'Rainbow',
@@ -88,24 +107,6 @@ export const THEMES: ThemeDefinition[] = [
     previewColors: ['#f1f3f5', '#e9ecef', '#343a40'],
     groupColors: ['#f8fafc', '#f1f5f9', '#f5f5f5', '#e2e8f0'],
   },
-  {
-    name: 'Dark',
-    mode: 'dark',
-    bg: '#0f0f1a', surface: '#1a1a2e', surface2: '#252540', border: 'rgba(255,255,255,0.08)',
-    text: '#e8e8f0', text2: '#8888a8',
-    accent: '#65a30d', gradient: 'linear-gradient(135deg, #a3e635 0%, #65a30d 100%)',
-    previewColors: ['#1a1a2e', '#252540', '#65a30d'],
-    groupColors: ['#1e1e32', '#1a2535', '#1e2a1e', '#2a1e2a'],
-  },
-  {
-    name: 'Obsidian',
-    mode: 'dark',
-    bg: '#111111', surface: '#1c1c1c', surface2: '#2a2a2a', border: 'rgba(255,255,255,0.07)',
-    text: '#f0f0f0', text2: '#888888',
-    accent: '#10b981', gradient: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)',
-    previewColors: ['#1c1c1c', '#2a2a2a', '#10b981'],
-    groupColors: ['#1c2a24', '#1c2428', '#1c1c28', '#241c2c'],
-  },
 ]
 
 interface ThemeContextType {
@@ -132,6 +133,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     root.style.setProperty('--theme-text', theme.text)
     root.style.setProperty('--theme-text2', theme.text2)
     root.style.setProperty('--theme-accent', theme.accent)
+    root.style.setProperty('--theme-gradient', theme.gradient)
+    root.style.setProperty('--brand-gradient', theme.gradient)
   }, [theme])
 
   const setThemeByName = (name: string) => {

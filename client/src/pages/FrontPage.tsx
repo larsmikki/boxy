@@ -1,20 +1,19 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { Gamepad2, Plus } from 'lucide-react'
+import BulkOperations from '@/components/BulkOperations'
 import GameCard from '@/components/GameCard'
 import GameForm from '@/components/GameForm'
 import SearchFilters, { type FilterState } from '@/components/SearchFilters'
-import BulkOperations from '@/components/BulkOperations'
-import { useToast } from '@/contexts/ToastContext'
-import { useTheme } from '@/contexts/ThemeContext'
 import { useCardSize } from '@/hooks/useCardSize'
-import { getGames, saveGame, deleteGame, toggleWishlist, bulkUpdateGames, bulkDeleteGames } from '@/lib/db'
+import { bulkDeleteGames, bulkUpdateGames, deleteGame, getGames, saveGame, toggleWishlist } from '@/lib/db'
 import type { Game } from '@/types'
+import { Button, Modal, Pill, Surface, useToast } from '@/components/ui'
 
 type Tab = 'collection' | 'wishlist'
 
 export default function FrontPage() {
-  const { toast } = useToast()
-  const { theme } = useTheme()
+  const { addToast } = useToast()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [games, setGames] = useState<Game[]>([])
@@ -28,22 +27,23 @@ export default function FrontPage() {
   const [selectedGames, setSelectedGames] = useState<Set<string>>(new Set())
   const { cardSize } = useCardSize()
 
-  useEffect(() => { loadGames() }, [])
-
-  const loadGames = async () => {
-    setLoading(true)
+  const loadGames = useCallback(async (showLoading = true) => {
+    if (showLoading) setLoading(true)
     try {
       const data = await getGames()
       setGames(Array.isArray(data) ? data : [])
     } catch {
-      toast({ title: 'Error loading games', description: 'Failed to load your game collection.', variant: 'destructive' })
+      addToast('Failed to load your game collection.', 'error')
     } finally {
       setLoading(false)
     }
-  }
+  }, [addToast])
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { loadGames(false) }, [loadGames])
 
   const filteredAndSortedGames = useMemo(() => {
-    let filtered = games.filter(game => {
+    const filtered = games.filter(game => {
       if (activeTab === 'collection' && game.is_wishlist) return false
       if (activeTab === 'wishlist' && !game.is_wishlist) return false
       if (filters.search && !game.title.toLowerCase().includes(filters.search.toLowerCase())) return false
@@ -52,11 +52,16 @@ export default function FrontPage() {
     })
 
     filtered.sort((a, b) => {
-      let av: any = a[filters.sortBy as keyof Game]
-      let bv: any = b[filters.sortBy as keyof Game]
-      if (typeof av === 'string') { av = av.toLowerCase(); bv = (bv as string)?.toLowerCase() ?? '' }
-      if (av < bv) return filters.sortOrder === 'asc' ? -1 : 1
-      if (av > bv) return filters.sortOrder === 'asc' ? 1 : -1
+      let av = a[filters.sortBy as keyof Game]
+      let bv = b[filters.sortBy as keyof Game]
+      if (typeof av === 'string') {
+        av = av.toLowerCase()
+        bv = (bv as string)?.toLowerCase() ?? ''
+      }
+      const aValue = av ?? ''
+      const bValue = bv ?? ''
+      if (aValue < bValue) return filters.sortOrder === 'asc' ? -1 : 1
+      if (aValue > bValue) return filters.sortOrder === 'asc' ? 1 : -1
       return 0
     })
 
@@ -66,12 +71,12 @@ export default function FrontPage() {
   const handleSaveGame = async (gameData: Omit<Game, 'id' | 'created_at' | 'updated_at'>) => {
     try {
       await saveGame(gameData, editingGame?.id)
-      toast({ title: editingGame ? 'Game updated' : 'Game added', description: `${gameData.title} saved.` })
+      addToast(`${editingGame ? 'Game updated' : 'Game added'} - ${gameData.title} saved.`, 'success')
       await loadGames()
       setSearchParams({})
       setEditingGame(undefined)
     } catch {
-      toast({ title: 'Error saving game', description: 'Failed to save. Please try again.', variant: 'destructive' })
+      addToast('Failed to save game. Please try again.', 'error')
     }
   }
 
@@ -79,10 +84,10 @@ export default function FrontPage() {
     try {
       const game = games.find(g => g.id === id)
       await deleteGame(id)
-      toast({ title: 'Game deleted', description: `${game?.title} removed.` })
+      addToast(`Game deleted - ${game?.title} removed.`, 'success')
       await loadGames()
     } catch {
-      toast({ title: 'Error', description: 'Failed to delete.', variant: 'destructive' })
+      addToast('Failed to delete.', 'error')
     }
   }
 
@@ -91,10 +96,10 @@ export default function FrontPage() {
       const game = games.find(g => g.id === id)
       if (!game) return
       await toggleWishlist(id)
-      toast({ title: 'Moved', description: game.title })
+      addToast(`Moved - ${game.title}`, 'success')
       await loadGames()
     } catch {
-      toast({ title: 'Error', description: 'Failed to update.', variant: 'destructive' })
+      addToast('Failed to update.', 'error')
     }
   }
 
@@ -106,17 +111,6 @@ export default function FrontPage() {
     gap: '1rem',
   }
 
-  const panelStyle = {
-    background: theme.surface, border: `1px solid ${theme.border}`, borderRadius: '0.5rem',
-  }
-
-  const accentBtnStyle = {
-    padding: '10px 20px', borderRadius: '12px', fontSize: '0.875rem', fontWeight: 600,
-    background: theme.gradient, color: '#fff', border: 'none', cursor: 'pointer',
-    display: 'inline-flex', alignItems: 'center', gap: '6px',
-    boxShadow: `0 4px 14px ${theme.accent}40`,
-  }
-
   const { collectionCount, wishlistCount } = useMemo(() => ({
     collectionCount: games.filter(g => !g.is_wishlist).length,
     wishlistCount: games.filter(g => g.is_wishlist).length,
@@ -124,49 +118,41 @@ export default function FrontPage() {
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight" style={{ color: theme.text }}>Your library</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight text-text">Your library</h1>
           {!loading && (
-            <p className="text-sm mt-0.5" style={{ color: theme.text2 }}>
+            <p className="text-sm mt-0.5 text-text2">
               {collectionCount} {collectionCount === 1 ? 'game' : 'games'} in your library
             </p>
           )}
         </div>
-        <button style={{ ...accentBtnStyle, marginTop: '10px' }} onClick={() => setSearchParams({ form: '1' })}>
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-          </svg>
+        <Button
+          type="button"
+          variant="primary"
+          size="lg"
+          className="mt-2.5 shrink-0"
+          leadingIcon={<Plus className="h-4 w-4" />}
+          onClick={() => setSearchParams({ form: '1' })}
+        >
           {activeTab === 'wishlist' ? 'Add to Wishlist' : 'Add Game'}
-        </button>
+        </Button>
       </div>
 
-      {/* Search bar */}
       <SearchFilters filters={filters} onFiltersChange={setFilters} />
 
-      {/* Category pills */}
       <div className="flex items-center gap-2 flex-wrap">
         {(['collection', 'wishlist'] as const).map(tab => (
-          <button
+          <Pill
             key={tab}
-            style={{
-              display: 'inline-flex', alignItems: 'center',
-              padding: '6px 14px', borderRadius: '8px', fontSize: '0.75rem', fontWeight: 600,
-              cursor: 'pointer', whiteSpace: 'nowrap',
-              border: activeTab === tab ? 'none' : `1px solid ${theme.border}`,
-              background: activeTab === tab ? theme.accent : theme.surface,
-              color: activeTab === tab ? '#fff' : theme.text2,
-              boxShadow: activeTab === tab ? `0 2px 8px ${theme.accent}50` : 'none',
-            }}
+            active={activeTab === tab}
             onClick={() => { setFilters(f => ({ ...f, condition: '' })); setActiveTab(tab) }}
           >
             {tab.charAt(0).toUpperCase() + tab.slice(1)}
-          </button>
+          </Pill>
         ))}
       </div>
 
-      {/* Games grid */}
       <div className="space-y-4">
         <BulkOperations
           selectedGames={selectedGames}
@@ -184,24 +170,24 @@ export default function FrontPage() {
         {loading ? (
           <div style={cardGridStyle}>
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="h-48 rounded-lg animate-pulse" style={{ background: theme.surface2 }} />
+              <div key={i} className="h-48 rounded-xl animate-pulse bg-surface2" />
             ))}
           </div>
         ) : filteredAndSortedGames.length === 0 ? (
-          <div className="py-16 text-center rounded-lg" style={panelStyle}>
-            <div className="text-5xl mb-3">{activeTab === 'wishlist' ? '📥' : '🎮'}</div>
-            <p className="font-semibold mb-1" style={{ color: theme.text }}>
+          <Surface className="py-16 px-6 text-center">
+            <Gamepad2 className="h-12 w-12 mx-auto mb-3 text-text2" aria-hidden="true" />
+            <p className="font-semibold mb-1 text-text">
               {activeTab === 'wishlist' ? 'No wishlist items found' : 'No games found'}
             </p>
-            <p className="text-sm mb-4" style={{ color: theme.text2 }}>
+            <p className="text-sm mb-4 text-text2">
               {activeTab === 'wishlist'
                 ? (wishlistCount === 0 ? 'Start adding games to your wishlist.' : 'Try adjusting your filters.')
                 : (collectionCount === 0 ? 'Add your first game to get started.' : 'Try adjusting your filters.')}
             </p>
-            <button style={accentBtnStyle} onClick={() => setSearchParams({ form: '1' })}>
+            <Button type="button" variant="primary" size="lg" onClick={() => setSearchParams({ form: '1' })}>
               {activeTab === 'wishlist' ? 'Add to Wishlist' : 'Add Your First Game'}
-            </button>
-          </div>
+            </Button>
+          </Surface>
         ) : (
           <div style={cardGridStyle}>
             {filteredAndSortedGames.map(game => (
@@ -213,9 +199,10 @@ export default function FrontPage() {
                 onToggleWishlist={handleToggleWishlist}
                 isSelected={selectedGames.has(game.id)}
                 onSelectionChange={(id, selected) => {
-                  const s = new Set(selectedGames)
-                  if (selected) s.add(id); else s.delete(id)
-                  setSelectedGames(s)
+                  const nextSelected = new Set(selectedGames)
+                  if (selected) nextSelected.add(id)
+                  else nextSelected.delete(id)
+                  setSelectedGames(nextSelected)
                 }}
               />
             ))}
@@ -224,16 +211,12 @@ export default function FrontPage() {
       </div>
 
       {showForm && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.72)' }}
-          onClick={() => { setSearchParams({}); setEditingGame(undefined) }}
+        <Modal
+          title={editingGame ? 'Edit game' : `Add ${activeTab === 'wishlist' ? 'wishlist ' : ''}game`}
+          maxWidth={640}
+          onClose={() => { setSearchParams({}); setEditingGame(undefined) }}
         >
-          <div
-            className="w-full max-w-xl overflow-y-auto"
-            style={{ maxHeight: '90vh' }}
-            onClick={e => e.stopPropagation()}
-          >
+          <div className="overflow-y-auto" style={{ maxHeight: 'calc(90vh - 65px)' }}>
             <GameForm
               game={editingGame}
               onSave={handleSaveGame}
@@ -241,7 +224,7 @@ export default function FrontPage() {
               isWishlist={activeTab === 'wishlist'}
             />
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   )
