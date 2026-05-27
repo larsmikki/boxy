@@ -1,12 +1,14 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Gamepad2, Plus } from 'lucide-react'
 import BulkOperations from '@/components/BulkOperations'
 import GameCard from '@/components/GameCard'
 import GameForm from '@/components/GameForm'
 import SearchFilters, { type FilterState } from '@/components/SearchFilters'
 import { useCardSize } from '@/hooks/useCardSize'
-import { bulkDeleteGames, bulkUpdateGames, deleteGame, getGames, saveGame, toggleWishlist } from '@/lib/db'
+import { bulkDeleteGames, bulkUpdateGames, deleteGame, getGames, saveGame, toggleWishlist } from '@/api'
+import { queryKeys } from '@/queryKeys'
 import type { Game } from '@/types'
 import { Button, Modal, Pill, Surface, useToast } from '@/components/ui'
 
@@ -15,9 +17,15 @@ type Tab = 'collection' | 'wishlist'
 export default function FrontPage() {
   const { addToast } = useToast()
   const [searchParams, setSearchParams] = useSearchParams()
+  const queryClient = useQueryClient()
 
-  const [games, setGames] = useState<Game[]>([])
-  const [loading, setLoading] = useState(true)
+  const { data: games = [], isLoading: loading } = useQuery({
+    queryKey: queryKeys.games,
+    queryFn: async () => {
+      const data = await getGames()
+      return Array.isArray(data) ? data : []
+    },
+  })
   const [activeTab, setActiveTab] = useState<Tab>('collection')
   const showForm = searchParams.has('form')
   const [editingGame, setEditingGame] = useState<Game | undefined>()
@@ -27,20 +35,36 @@ export default function FrontPage() {
   const [selectedGames, setSelectedGames] = useState<Set<string>>(new Set())
   const { cardSize } = useCardSize()
 
-  const loadGames = useCallback(async (showLoading = true) => {
-    if (showLoading) setLoading(true)
-    try {
-      const data = await getGames()
-      setGames(Array.isArray(data) ? data : [])
-    } catch {
-      addToast('Failed to load your game collection.', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }, [addToast])
+  const invalidateGames = async () => {
+    await queryClient.invalidateQueries({ queryKey: queryKeys.games })
+  }
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { loadGames(false) }, [loadGames])
+  const saveGameMutation = useMutation({
+    mutationFn: ({ gameData, existingId }: { gameData: Omit<Game, 'id' | 'created_at' | 'updated_at'>; existingId?: string }) =>
+      saveGame(gameData, existingId),
+    onSuccess: invalidateGames,
+  })
+
+  const deleteGameMutation = useMutation({
+    mutationFn: deleteGame,
+    onSuccess: invalidateGames,
+  })
+
+  const toggleWishlistMutation = useMutation({
+    mutationFn: toggleWishlist,
+    onSuccess: invalidateGames,
+  })
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: bulkDeleteGames,
+    onSuccess: invalidateGames,
+  })
+
+  const bulkUpdateMutation = useMutation({
+    mutationFn: ({ ids, updates }: { ids: string[]; updates: Partial<Game> }) =>
+      bulkUpdateGames(ids, updates),
+    onSuccess: invalidateGames,
+  })
 
   const filteredAndSortedGames = useMemo(() => {
     const filtered = games.filter(game => {
@@ -70,9 +94,8 @@ export default function FrontPage() {
 
   const handleSaveGame = async (gameData: Omit<Game, 'id' | 'created_at' | 'updated_at'>) => {
     try {
-      await saveGame(gameData, editingGame?.id)
+      await saveGameMutation.mutateAsync({ gameData, existingId: editingGame?.id })
       addToast(`${editingGame ? 'Game updated' : 'Game added'} - ${gameData.title} saved.`, 'success')
-      await loadGames()
       setSearchParams({})
       setEditingGame(undefined)
     } catch {
@@ -83,9 +106,8 @@ export default function FrontPage() {
   const handleDeleteGame = async (id: string) => {
     try {
       const game = games.find(g => g.id === id)
-      await deleteGame(id)
+      await deleteGameMutation.mutateAsync(id)
       addToast(`Game deleted - ${game?.title} removed.`, 'success')
-      await loadGames()
     } catch {
       addToast('Failed to delete.', 'error')
     }
@@ -95,9 +117,8 @@ export default function FrontPage() {
     try {
       const game = games.find(g => g.id === id)
       if (!game) return
-      await toggleWishlist(id)
+      await toggleWishlistMutation.mutateAsync(id)
       addToast(`Moved - ${game.title}`, 'success')
-      await loadGames()
     } catch {
       addToast('Failed to update.', 'error')
     }
@@ -157,12 +178,11 @@ export default function FrontPage() {
         <BulkOperations
           selectedGames={selectedGames}
           games={filteredAndSortedGames}
-          onDeleteGames={async ids => { await bulkDeleteGames(ids); await loadGames() }}
+          onDeleteGames={async ids => { await bulkDeleteMutation.mutateAsync(ids) }}
           onToggleWishlistGames={async (ids, toWishlist) => {
-            await bulkUpdateGames(ids, { is_wishlist: toWishlist })
-            await loadGames()
+            await bulkUpdateMutation.mutateAsync({ ids, updates: { is_wishlist: toWishlist } })
           }}
-          onBulkEdit={async (ids, updates) => { await bulkUpdateGames(ids, updates); await loadGames() }}
+          onBulkEdit={async (ids, updates) => { await bulkUpdateMutation.mutateAsync({ ids, updates }) }}
           onSelectAll={() => setSelectedGames(new Set(filteredAndSortedGames.map(g => g.id)))}
           onClearSelection={() => setSelectedGames(new Set())}
         />

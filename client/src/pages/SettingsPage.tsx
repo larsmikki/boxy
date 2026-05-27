@@ -3,7 +3,7 @@ import { Download, Trash2, Upload } from 'lucide-react'
 import ThemePicker from '@/components/ThemePicker'
 import { useCardSize } from '@/hooks/useCardSize'
 import { Button, Input, Modal, Surface, useToast } from '@/components/ui'
-import { deleteAllGames } from '@/lib/db'
+import { deleteAllGames } from '@/api'
 
 const DELETE_PHRASE = 'Yes, delete all games.'
 
