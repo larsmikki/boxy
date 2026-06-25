@@ -1,13 +1,13 @@
-# Boxy
+# Collectr
 
 ![screenshot](screenshot.png)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Docker Hub](https://img.shields.io/badge/Docker%20Hub-larsmikki%2Fboxy-blue?logo=docker)](https://hub.docker.com/r/larsmikki/boxy)
-[![ghcr.io](https://img.shields.io/badge/ghcr.io-larsmikki%2Fboxy-blue?logo=github)](https://github.com/larsmikki/boxy/pkgs/container/boxy)
+[![Docker Hub](https://img.shields.io/badge/Docker%20Hub-larsmikki%2Fcollectr-blue?logo=docker)](https://hub.docker.com/r/larsmikki/collectr)
+[![ghcr.io](https://img.shields.io/badge/ghcr.io-larsmikki%2Fcollectr-blue?logo=github)](https://github.com/larsmikki/collectr/pkgs/container/collectr)
 [![Node 20](https://img.shields.io/badge/Node-20-brightgreen?logo=node.js)](https://nodejs.org/)
 
-**Boxy** is a self-hosted game collection manager. Track your physical game library and wishlist, attach box art, filter by condition, and back up everything to a single JSON file — no cloud accounts, no subscriptions, no tracking.
+**Collectr** is a self-hosted game collection manager. Track your physical game library and wishlist, attach box art, filter by condition, and back up everything to a single JSON file — no cloud accounts, no subscriptions, no tracking.
 
 ## Features
 
@@ -31,28 +31,28 @@ Works on Synology, Unraid, TrueNAS, QNAP, Proxmox, or a plain Docker host.
 
 ```bash
 docker run -d \
-  --name boxy \
+  --name collectr \
   -p 3070:3070 \
-  -v boxy-data:/app/data \
+  -v collectr-data:/app/data \
   --restart unless-stopped \
-  larsmikki/boxy:latest
+  larsmikki/collectr:latest
 ```
 
 Or with Compose:
 
 ```yaml
 services:
-  boxy:
-    image: larsmikki/boxy:latest
-    container_name: boxy
+  collectr:
+    image: larsmikki/collectr:latest
+    container_name: collectr
     ports:
       - "3070:3070"
     volumes:
-      - boxy-data:/app/data
+      - collectr-data:/app/data
     restart: unless-stopped
 
 volumes:
-  boxy-data:
+  collectr-data:
 ```
 
 ### 2. Local install on Windows
@@ -60,8 +60,8 @@ volumes:
 Requires [Git for Windows](https://git-scm.com/download/win) and [Node.js 20+](https://nodejs.org/).
 
 ```powershell
-git clone https://github.com/larsmikki/boxy.git
-cd boxy
+git clone https://github.com/larsmikki/collectr.git
+cd collectr
 npm install
 npm run dev
 ```
@@ -72,8 +72,8 @@ For a production build: `npm run build && npm start`.
 
 ```bash
 brew install node git
-git clone https://github.com/larsmikki/boxy.git
-cd boxy
+git clone https://github.com/larsmikki/collectr.git
+cd collectr
 npm install
 npm run dev
 ```
@@ -88,8 +88,8 @@ Debian/Ubuntu:
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt-get install -y nodejs git
 
-git clone https://github.com/larsmikki/boxy.git
-cd boxy
+git clone https://github.com/larsmikki/collectr.git
+cd collectr
 npm install
 npm run dev
 ```
@@ -122,7 +122,7 @@ All configuration is done via environment variables:
 
 ## Data and runtime folders
 
-All data is stored in `DATA_DIR` (the Docker volume `boxy-data` by default):
+All data is stored in `DATA_DIR` (the Docker volume `collectr-data` by default):
 
 ```
 /app/data/
@@ -131,6 +131,17 @@ All data is stored in `DATA_DIR` (the Docker volume `boxy-data` by default):
 ```
 
 To back up manually, copy `games.json` and the `images/` folder. The **Export Backup** feature in Settings produces a single portable JSON file with images embedded.
+
+## Upgrading from Boxr / Big Box Companion
+
+Rename the existing Docker volume before deploying:
+
+```bash
+docker volume create collectr-data
+docker run --rm -v boxr-data:/from -v collectr-data:/to alpine sh -c "cp -a /from/. /to/"
+```
+
+Then deploy with the new image. Theme and card-size preferences stored in the browser reset to defaults once (they were already using neutral keys internally).
 
 ## Troubleshooting
 
@@ -156,4 +167,4 @@ Issues and pull requests are welcome. Please open an issue first to discuss larg
 
 ## Support
 
-If Boxy saves you time, consider [buying me a coffee](https://buymeacoffee.com/larsmikki) or [donating via PayPal](https://paypal.me/larsmikki). It helps keep the project free and maintained.
+If Collectr saves you time, consider [buying me a coffee](https://buymeacoffee.com/larsmikki) or [donating via PayPal](https://paypal.me/larsmikki). It helps keep the project free and maintained.

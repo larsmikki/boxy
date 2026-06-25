@@ -2,7 +2,7 @@ import { useState } from 'react'
 
 export type CardSize = 'small' | 'medium' | 'large'
 
-const KEY = 'boxy-card-size'
+const KEY = 'card-size'
 
 export function useCardSize() {
   const [cardSize, setCardSizeState] = useState<CardSize>(

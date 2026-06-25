@@ -3,7 +3,7 @@ import { useTheme } from '@/contexts/ThemeContext'
 import Footer from './Footer'
 
 const LogoMark = () => (
-  <img src="/favicon.svg" width={28} height={28} alt="Boxy" className="shrink-0" />
+  <img src="/favicon.svg" width={28} height={28} alt="Collectr" className="shrink-0" />
 )
 
 export default function Layout() {
@@ -21,7 +21,7 @@ export default function Layout() {
           <Link to="/" className="flex items-center gap-2.5" style={{ textDecoration: 'none' }}>
             <LogoMark />
             <span className="text-xl font-extrabold tracking-tight gradient-text select-none">
-              Boxy
+              Collectr
             </span>
           </Link>
 

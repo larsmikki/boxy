@@ -1,6 +1,6 @@
 openapi: 3.1.0
 info:
-  title: Boxy API
+  title: Collectr API
   description: Game collection management API. All state is stored server-side in a JSON file.
   version: 1.0.0
 

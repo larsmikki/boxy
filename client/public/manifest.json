@@ -1,6 +1,6 @@
 {
-  "name": "Boxy",
-  "short_name": "Boxy",
+  "name": "Collectr",
+  "short_name": "Collectr",
   "description": "Game collection tracker — self-hosted, private, free",
   "start_url": "/",
   "display": "standalone",

@@ -118,12 +118,12 @@ const ThemeContext = createContext<ThemeContextType>({ theme: THEMES[0], setThem
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<ThemeDefinition>(() => {
-    const stored = localStorage.getItem('boxy-theme')
+    const stored = localStorage.getItem('theme')
     return THEMES.find(t => t.name === stored) ?? THEMES[0]
   })
 
   useEffect(() => {
-    localStorage.setItem('boxy-theme', theme.name)
+    localStorage.setItem('theme', theme.name)
     document.documentElement.classList.toggle('dark', theme.mode === 'dark')
     const root = document.documentElement
     root.style.setProperty('--theme-bg', theme.bg)

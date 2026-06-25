@@ -1,12 +1,12 @@
 services:
-  boxy:
-    image: larsmikki/boxy:latest
-    container_name: boxy
+  collectr:
+    image: larsmikki/collectr:latest
+    container_name: collectr
     ports:
       - "3070:3070"
     volumes:
-      - boxy-data:/app/data
-    restart: unless-stopped
+      - collectr-data:/app/data
+    restart: always
     environment:
       - DATA_DIR=/app/data
     healthcheck:
@@ -16,4 +16,4 @@ services:
       retries: 3
 
 volumes:
-  boxy-data:
+  collectr-data:
