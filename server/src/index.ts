@@ -4,7 +4,7 @@ import { config } from './config.js';
 async function main() {
   const app = createApp();
   app.listen(config.port, () => {
-    console.log(`Collectr server running on http://localhost:${config.port}`);
+    console.log(`Big Box Companion server running on http://localhost:${config.port}`);
   });
 }
 

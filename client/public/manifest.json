@@ -1,6 +1,6 @@
 {
-  "name": "Collectr",
-  "short_name": "Collectr",
+  "name": "Big Box Companion",
+  "short_name": "Big Box",
   "description": "Game collection tracker — self-hosted, private, free",
   "start_url": "/",
   "display": "standalone",

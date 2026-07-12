@@ -9,7 +9,7 @@ export default function DonatePage() {
     <div className="max-w-2xl mx-auto">
       <div className="mb-8">
         <h1 className="text-2xl font-extrabold tracking-tight text-text">
-          Support Collectr
+          Support Big Box Companion
         </h1>
         <p className="text-sm mt-0.5 text-text2">
           I build privacy-first, self-hosted tools - no subscriptions, no ads, no tracking.
@@ -19,7 +19,7 @@ export default function DonatePage() {
 
       <Surface className="p-6 mb-5">
         <h2 className="text-base font-bold mb-1 text-text">What you get</h2>
-        <p className="text-xs mb-5 text-text2">Collectr is and always will be free, open source, and self-hosted.</p>
+        <p className="text-xs mb-5 text-text2">Big Box Companion is and always will be free, open source, and self-hosted.</p>
         <div className="flex flex-wrap gap-2">
           {[
             { Icon: ShieldCheck, label: '100% free forever', color: '#22c55e' },
@@ -73,7 +73,7 @@ export default function DonatePage() {
       <Surface className="p-6">
         <h2 className="text-base font-bold mb-1 text-text">Thank you</h2>
         <p className="text-xs text-text2">
-          Every bit of support keeps Collectr free for everyone.
+          Every bit of support keeps Big Box Companion free for everyone.
         </p>
       </Surface>
     </div>
