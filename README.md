@@ -1,13 +1,13 @@
-# Big Box Companion
+# Collecter
 
 ![screenshot](screenshot.png)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Docker Hub](https://img.shields.io/badge/Docker%20Hub-larsmikki%2Fbig--box--companion-blue?logo=docker)](https://hub.docker.com/r/larsmikki/big-box-companion)
-[![ghcr.io](https://img.shields.io/badge/ghcr.io-larsmikki%2Fbig--box--companion-blue?logo=github)](https://github.com/larsmikki/big-box-companion/pkgs/container/big-box-companion)
+[![Docker Hub](https://img.shields.io/badge/Docker%20Hub-larsmikki%2Fcollecter-blue?logo=docker)](https://hub.docker.com/r/larsmikki/collecter)
+[![ghcr.io](https://img.shields.io/badge/ghcr.io-larsmikki%2Fcollecter-blue?logo=github)](https://github.com/larsmikki/collecter/pkgs/container/collecter)
 [![Node 20](https://img.shields.io/badge/Node-20-brightgreen?logo=node.js)](https://nodejs.org/)
 
-**Big Box Companion** is a self-hosted game collection manager. Track your physical game library and wishlist, attach box art, filter by condition, and back up everything to a single JSON file — no cloud accounts, no subscriptions, no tracking.
+**Collecter** is a self-hosted game collection manager. Track your physical game library and wishlist, attach box art, filter by condition, and back up everything to a single JSON file — no cloud accounts, no subscriptions, no tracking.
 
 ## Features
 
@@ -31,28 +31,28 @@ Works on Synology, Unraid, TrueNAS, QNAP, Proxmox, or a plain Docker host.
 
 ```bash
 docker run -d \
-  --name big-box-companion \
+  --name collecter \
   -p 3070:3070 \
-  -v big-box-companion-data:/app/data \
+  -v collecter-data:/app/data \
   --restart unless-stopped \
-  larsmikki/big-box-companion:latest
+  larsmikki/collecter:latest
 ```
 
 Or with Compose:
 
 ```yaml
 services:
-  big-box-companion:
-    image: larsmikki/big-box-companion:latest
-    container_name: big-box-companion
+  collecter:
+    image: larsmikki/collecter:latest
+    container_name: collecter
     ports:
       - "3070:3070"
     volumes:
-      - big-box-companion-data:/app/data
+      - collecter-data:/app/data
     restart: unless-stopped
 
 volumes:
-  big-box-companion-data:
+  collecter-data:
 ```
 
 ### 2. Local install on Windows
@@ -60,8 +60,8 @@ volumes:
 Requires [Git for Windows](https://git-scm.com/download/win) and [Node.js 20+](https://nodejs.org/).
 
 ```powershell
-git clone https://github.com/larsmikki/big-box-companion.git
-cd big-box-companion
+git clone https://github.com/larsmikki/collecter.git
+cd collecter
 npm install
 npm run dev
 ```
@@ -72,8 +72,8 @@ For a production build: `npm run build && npm start`.
 
 ```bash
 brew install node git
-git clone https://github.com/larsmikki/big-box-companion.git
-cd big-box-companion
+git clone https://github.com/larsmikki/collecter.git
+cd collecter
 npm install
 npm run dev
 ```
@@ -88,8 +88,8 @@ Debian/Ubuntu:
 curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
 sudo apt-get install -y nodejs git
 
-git clone https://github.com/larsmikki/big-box-companion.git
-cd big-box-companion
+git clone https://github.com/larsmikki/collecter.git
+cd collecter
 npm install
 npm run dev
 ```
@@ -122,7 +122,7 @@ All configuration is done via environment variables:
 
 ## Data and runtime folders
 
-All data is stored in `DATA_DIR` (the Docker volume `big-box-companion-data` by default):
+All data is stored in `DATA_DIR` (the Docker volume `collecter-data` by default):
 
 ```
 /app/data/
@@ -132,16 +132,18 @@ All data is stored in `DATA_DIR` (the Docker volume `big-box-companion-data` by 
 
 To back up manually, copy `games.json` and the `images/` folder. The **Export Backup** feature in Settings produces a single portable JSON file with images embedded.
 
-## Upgrading from Collectr
+## Upgrading from Big Box Companion
 
 Rename the existing Docker volume before deploying:
 
 ```bash
-docker volume create big-box-companion-data
-docker run --rm -v collectr-data:/from -v big-box-companion-data:/to alpine sh -c "cp -a /from/. /to/"
+docker volume create collecter-data
+docker run --rm -v big-box-companion-data:/from -v collecter-data:/to alpine sh -c "cp -a /from/. /to/"
 ```
 
 Then deploy with the new image. Theme and card-size preferences stored in the browser reset to defaults once (they were already using neutral keys internally).
+
+For an older Collectr deployment, use `collectr-data` as the source volume instead.
 
 ## Troubleshooting
 
@@ -167,4 +169,4 @@ Issues and pull requests are welcome. Please open an issue first to discuss larg
 
 ## Support
 
-If Big Box Companion saves you time, consider [buying me a coffee](https://buymeacoffee.com/larsmikki) or [donating via PayPal](https://paypal.me/larsmikki). It helps keep the project free and maintained.
+If Collecter saves you time, consider [buying me a coffee](https://buymeacoffee.com/larsmikki) or [donating via PayPal](https://paypal.me/larsmikki). It helps keep the project free and maintained.

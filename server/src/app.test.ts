@@ -2,7 +2,7 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { createApp } from './app.js';
 
-describe('Big Box Companion server', () => {
+describe('Collecter server', () => {
   it('returns health status', async () => {
     const response = await request(createApp()).get('/api/health');
 

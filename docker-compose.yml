@@ -1,11 +1,11 @@
 services:
-  big-box-companion:
-    image: larsmikki/big-box-companion:latest
-    container_name: big-box-companion
+  collecter:
+    image: larsmikki/collecter:latest
+    container_name: collecter
     ports:
       - "3070:3070"
     volumes:
-      - big-box-companion-data:/app/data
+      - collecter-data:/app/data
     restart: always
     environment:
       - DATA_DIR=/app/data
@@ -16,4 +16,4 @@ services:
       retries: 3
 
 volumes:
-  big-box-companion-data:
+  collecter-data:
